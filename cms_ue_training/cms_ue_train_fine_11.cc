@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAdress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
     root_tree->AddFriend(hlt_tree);
 
     size_t nentries = root_tree->GetEntries();

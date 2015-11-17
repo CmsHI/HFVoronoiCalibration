@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = reinterpret_cast<TTree *>(gDirectory->Get(root_tree_name));
-    TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    //TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -163,7 +163,8 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = static_cast<TTree *>(gDirectory->Get(root_tree_name));
-    TTree *hlt_tree  = static_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    TTree *hlt_tree  = static_cast<TTree *>(f->Get(hlt_tree_name));
+    root_tree->AddFriend(hlt_tree);  
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -190,16 +191,16 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAdress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
 
-    root_tree->AddFriend(hlt_tree);
+//    root_tree->AddFriend(hlt_tree);
 		
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
 
     for (size_t i = 0; i < nevent_file; i++) {
 
       root_tree->GetEntry(i);
-      hlt_tree->GetEntry(i);
+      //hlt_tree->GetEntry(i);
       
       if(selMBTrigger && !MinBiasTriggerBit) continue; 
 

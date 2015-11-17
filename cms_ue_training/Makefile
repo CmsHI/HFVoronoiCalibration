@@ -8,7 +8,8 @@ LIBS =			$(shell root-config --noldflags --libs) -llapack -lblas -lquadmath -lgf
 
 all:			cms_ue_train_coarse cms_ue_train_fine \
 			cms_ue_train_coarse_11 cms_ue_train_fine_11 \
-			cms_ue_train_coarse_15_hermite
+			cms_ue_train_coarse_15_hermite \
+			cms_ue_train_coarse_15_hermite_datavsMCRun2
 
 cms_ue_train_coarse:	cms_ue_train_coarse.o
 			$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -23,6 +24,9 @@ cms_ue_train_fine_11:	cms_ue_train_fine_11.o
 			$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 cms_ue_train_coarse_15_hermite:	cms_ue_train_coarse_15_hermite.o
+			$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+cms_ue_train_coarse_15_hermite_datavsMCRun2: cms_ue_train_coarse_15_hermite_datavsMCRun2.o
 			$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 clean:

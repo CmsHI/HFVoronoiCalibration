@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = reinterpret_cast<TTree *>(gDirectory->Get(root_tree_name));
-    TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    //TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAdress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
 
     root_tree->AddFriend(hlt_tree);
 		
@@ -490,9 +490,9 @@ int main(int argc, char *argv[])
   float scaleTarget_ = 1.91625e+00;
   
   std::transform(feature.begin(), feature.end(), feature.begin(),
-               std::bind1st(std::multiplies<T>(),scaleFeature_));
+               std::bind1st(std::multiplies<float>(),scaleFeature_));
   std::transform(target.begin(), target.end(), target.begin(),
-               std::bind1st(std::multiplies<T>(),scaleTarget_));
+               std::bind1st(std::multiplies<float>(),scaleTarget_));
   
   std::vector<double> singular_value(
 				     std::min(feature_size, ncolumn),
