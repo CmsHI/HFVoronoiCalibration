@@ -43,12 +43,12 @@ size_t pf_id_reduce(const Int_t pf_id)
   return 0;
 }
 
-void subtraction_internal_ver4(const int data = 1, const int calorimetric = 0)
+void subtraction_internal_ver4(const int data = 1, const int calorimetric = 1)
 {
 
   gStyle->SetOptStat(0);
 
-  std::ifstream in_stream(data ? (calorimetric ? "../cms_ue_training/ue_calibrations_calo_data.txt" : "../cms_ue_training/ue_calibrations_pf_data.txt") : (calorimetric ? "../cms_ue_training/ue_calibrations_calo_mc.txt" : "../cms_ue_training/ue_calibrations_pf_mc.txt"));
+  std::ifstream in_stream(data ? (calorimetric ? "../cms_ue_training/run1/ue_calibrations_calo_data.txt" : "../cms_ue_training/run1/ue_calibrations_pf_data.txt") : (calorimetric ? "../cms_ue_training/run1/ue_calibrations_calo_mc.txt" : "../cms_ue_training/run1/ue_calibrations_pf_mc.txt"));
   std::string line;
   size_t index = 0;
   const size_t nline_predictor = 3 * 15 * (1 + (5 - 1) * 2) * 82;
@@ -82,7 +82,7 @@ void subtraction_internal_ver4(const int data = 1, const int calorimetric = 0)
   }
 
 
-  TFile * fout = new TFile(Form("VSTraining_HFEnergy_fitfunctions_%disCalorimetric_%disData.root", calorimetric, data),"RECREATE");
+  TFile * fout = new TFile(Form("VSTraining_HFEnergy_Run1_fitfunctions_%disCalorimetric_%disData.root", calorimetric, data),"RECREATE");
   fout->cd();
   std::vector<TF1 *> function;
 
@@ -250,6 +250,8 @@ void subtraction_internal_ver4(const int data = 1, const int calorimetric = 0)
 
 
   fout->Write();
+
+  function.clear();
       
   //	gSystem->Exit(0);
 }

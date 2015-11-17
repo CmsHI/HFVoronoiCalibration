@@ -486,13 +486,13 @@ int main(int argc, char *argv[])
 #endif
 
   // addting from Raghav goig from MC to Data for Run2. comparing run1 data to MC. 
-  // float scaleFeature_ = 7.42673e-01;
-  // float scaleTarget_ = 1.91625e+00;
+  float scaleFeature_ = 7.42673e-01;
+  float scaleTarget_ = 1.91625e+00;
   
-  // std::transform(feature.begin(), feature.end(), feature.begin(),
-  //              std::bind1st(std::multiplies<T>(),scaleFeature_));
-  // std::transform(target.begin(), target.end(), target.begin(),
-  //              std::bind1st(std::multiplies<T>(),scaleTarget_));
+  std::transform(feature.begin(), feature.end(), feature.begin(),
+               std::bind1st(std::multiplies<T>(),scaleFeature_));
+  std::transform(target.begin(), target.end(), target.begin(),
+               std::bind1st(std::multiplies<T>(),scaleTarget_));
   
   std::vector<double> singular_value(
 				     std::min(feature_size, ncolumn),
