@@ -190,7 +190,10 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    // OR trigger mentioned below is not the correct one. 
+    //hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    // the one mentioned below, i got from Yen-Jie email about the latest trigger bit for the express streams
+    hlt_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1_AND",&MinBiasTriggerBit);
 
     root_tree->AddFriend(hlt_tree);
 		
