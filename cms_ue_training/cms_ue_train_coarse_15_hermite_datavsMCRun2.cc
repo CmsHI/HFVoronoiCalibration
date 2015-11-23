@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
-  const char *hlt_tree_name  = "hltanalysis/HltTree";
+  //const char *hlt_tree_name  = "hltanalysis/HltTree";
   static const size_t nreduced_id = 3;
   size_t nevent = 0;
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = static_cast<TTree *>(gDirectory->Get(root_tree_name));
-    TTree *hlt_tree  = static_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    //TTree *hlt_tree  = static_cast<TTree *>(gDirectory->Get(hlt_tree_name));
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     Float_t pfEta[32768];
     Float_t pfPhi[32768];
 
-    Int_t MinBiasTriggerBit;
+    //Int_t MinBiasTriggerBit;
 		
     if (calorimetric) {
       root_tree->SetBranchAddress("n", &nPFpart);
@@ -193,18 +193,18 @@ int main(int argc, char *argv[])
     // OR trigger mentioned below is not the correct one. 
     //hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
     // the one mentioned below, i got from Yen-Jie email about the latest trigger bit for the express streams
-    hlt_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1_AND",&MinBiasTriggerBit);
+   // hlt_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1_AND",&MinBiasTriggerBit);
 
-    root_tree->AddFriend(hlt_tree);
+   // root_tree->AddFriend(hlt_tree);
 		
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
 
     for (size_t i = 0; i < nevent_file; i++) {
 
       root_tree->GetEntry(i);
-      hlt_tree->GetEntry(i);
+     // hlt_tree->GetEntry(i);
       
-      if(selMBTrigger && !MinBiasTriggerBit) continue; 
+      //if(selMBTrigger && !MinBiasTriggerBit) continue; 
 
       double pt_fourier[nedge - 1][nreduced_id][nfourier][2];
 
@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
   
   // for PF training 
   if(!calorimetric){
-  	scaleFeatuer_ = 1.02345e+00;
+  	scaleFeature_ = 1.02345e+00;
   	scaleTarget_  = 1.59854e+00;	
   }
   std::transform(feature.begin(), feature.end(), feature.begin(),

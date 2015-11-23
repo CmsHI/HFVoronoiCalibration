@@ -184,8 +184,8 @@ int main(int argc, char *argv[])
     Int_t MinBiasTriggerBit;
     Int_t phfCoincFilter;
 
-    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
     //    root_tree->SetBranchAddress("HLT_L1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
     root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
     if (calorimetric) {
       root_tree->SetBranchAddress("n", &nPFpart);
