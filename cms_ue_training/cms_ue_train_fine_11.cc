@@ -14,7 +14,7 @@
 
 size_t nevent;
 static const size_t nfourier = 1;
-static const bool   selMBTrigger = false;
+static const bool   selMBTrigger = true;//false;
 
 void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par,
 	 Int_t iflag)
@@ -50,11 +50,12 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = false;
+  bool calorimetric = true;//false;
 
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
   const char *hlt_tree_name  = "hltanalysis/HltTree";
+  const char *skim_tree_name  = "skimanalysis/HltTree"; //phfConcFilter3
   static const size_t nreduced_id = 3;
 
   const unsigned int plot_n = 0;
@@ -161,7 +162,10 @@ int main(int argc, char *argv[])
     TFile f(iterator_filename->c_str());
     TTree *root_tree = (TTree *)gDirectory->Get(root_tree_name);
     TTree *hlt_tree  = (TTree *)gDirectory->Get(hlt_tree_name);
-
+    TTree *skim_tree  = (TTree *)gDirectory->Get(skim_tree_name);
+    root_tree->AddFriend(hlt_tree);
+    root_tree->AddFriend(skim_tree);
+    
     fprintf(stderr, "%s:%d:\n", __FILE__, __LINE__);
 
     Int_t nPFpart;
@@ -171,7 +175,8 @@ int main(int argc, char *argv[])
     Float_t pfPhi[32768];
 
     Int_t MinBiasTriggerBit;
-
+    Int_t phfCoincFilter;
+    
     if (calorimetric) {
       root_tree->SetBranchAddress("n", &nPFpart);
       root_tree->SetBranchAddress("et", pfPt);
@@ -186,16 +191,20 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    //    root_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
+    root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
     root_tree->AddFriend(hlt_tree);
+    root_tree->AddFriend(skim_tree);
 
     size_t nentries = root_tree->GetEntries();
 
     for (size_t i = 0; i < nentries; i++) {
       root_tree->GetEntry(i);
-      hlt_tree->GetEntry(i);
+      //hlt_tree->GetEntry(i);
 
-      if(selMBTrigger && !MinBiasTriggerBit) continue; 
+      if(selMBTrigger && !MinBiasTriggerBit) continue;
+      if(selMBTrigger && !phfCoincFilter) continue; 
       
       if (i % 10 == 0) {
 	fprintf(stderr, "%s:%d: %ld %d\n", __FILE__, __LINE__, i, nPFpart);

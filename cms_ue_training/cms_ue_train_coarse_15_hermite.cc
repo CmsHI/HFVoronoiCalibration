@@ -15,7 +15,7 @@ static const size_t norder_emulate = 9;
 static const size_t norder = 9;
 static const size_t nfeature = 2 * nfourier - 1;
 static const size_t ncolumn = nfeature * norder + 1;
-static const bool   selMBTrigger = false;
+static const bool   selMBTrigger = true;//false;
 
 double hermite_h_normalized(const size_t n, const double x)
 {
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = false;
+  bool calorimetric = true;//false;
 
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "-c", 2) == 0 ||
@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
   const char *hlt_tree_name  = "hltanalysis/HltTree";
+  const char *skim_tree_name  = "skimanalysis/HltTree"; //phfConcFilter3
   static const size_t nreduced_id = 3;
   size_t nevent = 0;
 
@@ -66,7 +67,9 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = reinterpret_cast<TTree *>(gDirectory->Get(root_tree_name));
-    //TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    //    TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
+    // TTree *skim_tree  = reinterpret_cast<TTree *>(gDirectory->Get(skim_tree_name));
+    
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -164,7 +167,10 @@ int main(int argc, char *argv[])
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = static_cast<TTree *>(gDirectory->Get(root_tree_name));
     TTree *hlt_tree  = static_cast<TTree *>(f->Get(hlt_tree_name));
-    root_tree->AddFriend(hlt_tree);  
+    TTree *skim_tree  = (TTree *)gDirectory->Get(skim_tree_name);
+    root_tree->AddFriend(hlt_tree);
+    root_tree->AddFriend(skim_tree);
+    
     size_t nevent_file = root_tree->GetEntries();
 
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
@@ -176,7 +182,11 @@ int main(int argc, char *argv[])
     Float_t pfPhi[32768];
 
     Int_t MinBiasTriggerBit;
-		
+    Int_t phfCoincFilter;
+
+    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    //    root_tree->SetBranchAddress("HLT_L1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
     if (calorimetric) {
       root_tree->SetBranchAddress("n", &nPFpart);
       root_tree->SetBranchAddress("et", pfPt);
@@ -191,9 +201,7 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    hlt_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
-
-//    root_tree->AddFriend(hlt_tree);
+    //    root_tree->AddFriend(hlt_tree);
 		
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
 
@@ -202,7 +210,8 @@ int main(int argc, char *argv[])
       root_tree->GetEntry(i);
       //hlt_tree->GetEntry(i);
       
-      if(selMBTrigger && !MinBiasTriggerBit) continue; 
+      if(selMBTrigger && !MinBiasTriggerBit) continue;
+      if(selMBTrigger && !phfCoincFilter) continue;
 
       double pt_fourier[nedge - 1][nreduced_id][nfourier][2];
 
