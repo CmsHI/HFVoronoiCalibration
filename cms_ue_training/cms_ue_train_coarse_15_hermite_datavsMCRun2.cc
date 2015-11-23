@@ -489,9 +489,15 @@ int main(int argc, char *argv[])
 #endif
 
   // addting from Raghav goig from MC to Data for Run2. comparing run1 data to MC. 
+  // old calo training 
   float scaleFeature_ = 7.42673e-01;
-  float scaleTarget_ = 1.91625e+00;
+  float scaleTarget_  = 1.91625e+00;
   
+  // for PF training 
+  if(!calorimetric){
+  	scaleFeatuer_ = 1.02345e+00;
+  	scaleTarget_  = 1.59854e+00;	
+  }
   std::transform(feature.begin(), feature.end(), feature.begin(),
                std::bind1st(std::multiplies<float>(),scaleFeature_));
   std::transform(target.begin(), target.end(), target.begin(),
