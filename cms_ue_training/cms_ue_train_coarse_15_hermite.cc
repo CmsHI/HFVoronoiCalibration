@@ -54,8 +54,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  int iaccept = 0;
-
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
   const char *hlt_tree_name  = "hltanalysis/HltTree";
@@ -146,8 +144,6 @@ int main(int argc, char *argv[])
     }
   }
 
-  size_t nevent_read = 0;
-
   std::vector<double> density_table;
   std::vector<std::vector<double> > scale_check_table(nfourier, std::vector<double>());
 
@@ -166,6 +162,7 @@ int main(int argc, char *argv[])
     scale[2] = 1.0 / 220.0;
   }
 
+  size_t nevent_read = 0;
 
   for (int index_file = 0; index_file < argc - 1; index_file++) {
     if (argv[index_file + 1][0] == '-') {
@@ -211,18 +208,17 @@ int main(int argc, char *argv[])
     //    root_tree->AddFriend(hlt_tree);
 		
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
+    if (nevent_read > nevent) continue;
 
     for (size_t i = 0; i < nevent_file; i++) {
-      if(iaccept>nevent) continue;
+      if(nevent_read > nevent) continue;
       
       root_tree->GetEntry(i);
       //hlt_tree->GetEntry(i);
       
       if(selMBTrigger && !MinBiasTriggerBit) continue;
       if(selMBTrigger && !phfCoincFilter) continue;
-      iaccept++;
-      //fprintf(stderr, "iaccept %d\n",iaccept);
-      
+
       double pt_fourier[nedge - 1][nreduced_id][nfourier][2];
 
       for (size_t k = 1; k < nedge; k++) {
@@ -283,7 +279,7 @@ int main(int argc, char *argv[])
 	}
       }
 
-      const size_t row = nevent_read + i;
+      const size_t row = nevent_read;
 
       if (row >= nevent) {
 	break;
@@ -396,13 +392,13 @@ int main(int argc, char *argv[])
 	}
       }
 
-#if 0
+#if 1
       if (i % 1000 == 0) {
-	fprintf(stderr, "\rReading ... %5.1f%%", i * (100.0 / nevent));
+	fprintf(stderr, "\rReading ... %5.1f%% %lu accepted", i * (100.0 / nevent), nevent_read);
       }
 #endif
+      nevent_read++;
     }
-    nevent_read += nevent_file;
     f->Close();
   }
 #if 0
@@ -606,7 +602,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  fprintf(stderr, "nevent = %lu  iaccept %d \n", nevent,iaccept);
+  fprintf(stderr, "nevent = %lu  iaccept %lu \n", nevent,nevent_read);
   
 
   if (false) {

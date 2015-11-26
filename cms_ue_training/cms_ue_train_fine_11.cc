@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 	 filename_list.begin();
        iterator_filename != filename_list.end(); iterator_filename++) {
 
-    //    if(iaccept>3000) continue;    
+    if(iaccept>3000) continue;    
     
     TFile f(iterator_filename->c_str());
     TTree *root_tree = (TTree *)gDirectory->Get(root_tree_name);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
     size_t nentries = root_tree->GetEntries();
 
     for (size_t i = 0; i < nentries; i++) {
-      //if(iaccept>3000) continue;
+      if(iaccept>3000) continue;
       root_tree->GetEntry(i);
       
       if(selMBTrigger && !MinBiasTriggerBit) continue;
