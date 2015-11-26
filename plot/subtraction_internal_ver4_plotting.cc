@@ -48,7 +48,7 @@ void subtraction_internal_ver4_plotting(const int data = 1, const int calorimetr
 
   gStyle->SetOptStat(0);
 
-  std::ifstream in_stream(data ? (calorimetric ? "../cms_ue_training/run1/ue_calibrations_calo_data.txt" : "../cms_ue_training/run1/ue_calibrations_pf_data.txt") : (calorimetric ? "../cms_ue_training/run1/ue_calibrations_calo_mc.txt" : "../cms_ue_training/run1/ue_calibrations_pf_mc.txt"));
+  std::ifstream in_stream(data ? (calorimetric ? "ue_calibration_calo_data.txt" : "ue_calibration_pf_data.txt") : (calorimetric ? "ue_calibration_calo_mc.txt" : "ue_calibration_pf_mc.txt"));
   std::string line;
   size_t index = 0;
   const size_t nline_predictor = 3 * 15 * (1 + (5 - 1) * 2) * 82;

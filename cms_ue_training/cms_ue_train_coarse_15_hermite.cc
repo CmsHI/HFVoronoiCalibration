@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
     }
   }
 
+  int iaccept = 0;
+
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
   const char *hlt_tree_name  = "hltanalysis/HltTree";
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
     // TTree *skim_tree  = reinterpret_cast<TTree *>(gDirectory->Get(skim_tree_name));
     
     size_t nevent_file = root_tree->GetEntries();
-
+    fprintf(stderr, "nevent_file: %lu\n",nevent_file);
     // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
 
     nevent += nevent_file;
@@ -80,8 +82,10 @@ int main(int argc, char *argv[])
 
   fprintf(stderr, "%s:%d: nevent = %lu\n", __FILE__, __LINE__, nevent);
 
-  nevent = std::min(11000UL, nevent);//MVedit
+  //  nevent = std::min(11000UL, nevent);//MVedit
 
+  fprintf(stderr, "%s:%d: nevent = %lu\n", __FILE__, __LINE__, nevent);
+  
   if (nevent < 1) {
     // No point to continue, and LAPACK would also fail in this
     // case.
@@ -116,7 +120,9 @@ int main(int argc, char *argv[])
 #endif
 
   const size_t nregularization = nfeature * (norder - 1);
+  nevent = 20000;
   const size_t feature_size = nevent + nregularization;
+  //  const size_t feature_size = 20000 + nregularization;
 
   static const double default_value = 0;
 
@@ -159,6 +165,7 @@ int main(int argc, char *argv[])
   if (nfourier >= 3) {
     scale[2] = 1.0 / 220.0;
   }
+
 
   for (int index_file = 0; index_file < argc - 1; index_file++) {
     if (argv[index_file + 1][0] == '-') {
@@ -206,13 +213,16 @@ int main(int argc, char *argv[])
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
 
     for (size_t i = 0; i < nevent_file; i++) {
-
+      if(iaccept>nevent) continue;
+      
       root_tree->GetEntry(i);
       //hlt_tree->GetEntry(i);
       
       if(selMBTrigger && !MinBiasTriggerBit) continue;
       if(selMBTrigger && !phfCoincFilter) continue;
-
+      iaccept++;
+      //fprintf(stderr, "iaccept %d\n",iaccept);
+      
       double pt_fourier[nedge - 1][nreduced_id][nfourier][2];
 
       for (size_t k = 1; k < nedge; k++) {
@@ -596,6 +606,8 @@ int main(int argc, char *argv[])
     }
   }
 
+  fprintf(stderr, "nevent = %lu  iaccept %d \n", nevent,iaccept);
+  
 
   if (false) {
     for (size_t j = 1; j < 16; j++) {

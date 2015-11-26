@@ -156,9 +156,13 @@ int main(int argc, char *argv[])
   TProfile *profile = NULL;
 #endif
 
+  int iaccept = 0;
   for (std::vector<std::string>::const_iterator iterator_filename =
 	 filename_list.begin();
        iterator_filename != filename_list.end(); iterator_filename++) {
+
+    //    if(iaccept>3000) continue;    
+    
     TFile f(iterator_filename->c_str());
     TTree *root_tree = (TTree *)gDirectory->Get(root_tree_name);
     TTree *hlt_tree  = (TTree *)gDirectory->Get(hlt_tree_name);
@@ -200,11 +204,12 @@ int main(int argc, char *argv[])
     size_t nentries = root_tree->GetEntries();
 
     for (size_t i = 0; i < nentries; i++) {
+      //if(iaccept>3000) continue;
       root_tree->GetEntry(i);
-      //hlt_tree->GetEntry(i);
-
+      
       if(selMBTrigger && !MinBiasTriggerBit) continue;
       if(selMBTrigger && !phfCoincFilter) continue; 
+      iaccept++;
       
       if (i % 10 == 0) {
 	fprintf(stderr, "%s:%d: %ld %d\n", __FILE__, __LINE__, i, nPFpart);
@@ -370,7 +375,7 @@ int main(int argc, char *argv[])
   }
   fprintf(stderr, "\r                                             "
 	  "                                  \n");
-  fprintf(stderr, "nevent = %lu\n", nevent);
+  fprintf(stderr, "nevent = %lu  iaccept %d\n", nevent,iaccept);
 
 #if 1
   for (int plot_reduced_id = 0; plot_reduced_id < 3; plot_reduced_id++) {
