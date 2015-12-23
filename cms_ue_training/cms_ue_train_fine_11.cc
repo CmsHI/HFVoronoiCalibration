@@ -14,7 +14,7 @@
 
 size_t nevent;
 static const size_t nfourier = 1;
-static const bool   selMBTrigger = true;//false;
+static const bool   selMBTrigger = false;
 
 void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par,
 	 Int_t iflag)
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = true;//false;
+  bool calorimetric = false;
 
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
@@ -162,8 +162,8 @@ int main(int argc, char *argv[])
        iterator_filename != filename_list.end(); iterator_filename++) {
 
     if(iaccept>3000) continue;    
-    
-    TFile f(iterator_filename->c_str());
+   
+    TFile *f = TFile::Open(iterator_filename->c_str());
     TTree *root_tree = (TTree *)gDirectory->Get(root_tree_name);
     TTree *hlt_tree  = (TTree *)gDirectory->Get(hlt_tree_name);
     TTree *skim_tree  = (TTree *)gDirectory->Get(skim_tree_name);
@@ -195,9 +195,9 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
 
-    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
-    //    root_tree->SetBranchAddress("HLT_L1MinimumBiasHF1_OR_part1_v1",&MinBiasTriggerBit);
-    root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
+    if(root_tree->GetBranch("HLT_HIL1MinimumBiasHF1AND_v1")) root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    if(root_tree->GetBranch("phfCoincFilter3")) root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
+
     root_tree->AddFriend(hlt_tree);
     root_tree->AddFriend(skim_tree);
 
@@ -371,7 +371,7 @@ int main(int argc, char *argv[])
       }
 #endif
     }
-    f.Close();
+    f->Close();
   }
   fprintf(stderr, "\r                                             "
 	  "                                  \n");

@@ -15,7 +15,7 @@ static const size_t norder_emulate = 9;
 static const size_t norder = 9;
 static const size_t nfeature = 2 * nfourier - 1;
 static const size_t ncolumn = nfeature * norder + 1;
-static const bool   selMBTrigger = true;//false;
+static const bool   selMBTrigger = false;
 
 double hermite_h_normalized(const size_t n, const double x)
 {
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = true;//false;
+  bool calorimetric = false;
 
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "-c", 2) == 0 ||
@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
     Int_t phfCoincFilter;
 
     //    root_tree->SetBranchAddress("HLT_L1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
-    root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
-    root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
+    if(root_tree->GetBranch("HLT_HIL1MinimumBiasHF1AND_v1")) root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
+    if(root_tree->GetBranch("phfCoincFilter3")) root_tree->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
     if (calorimetric) {
       root_tree->SetBranchAddress("n", &nPFpart);
       root_tree->SetBranchAddress("et", pfPt);
