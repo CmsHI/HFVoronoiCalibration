@@ -2,8 +2,8 @@
 #include "TTree.h"
 #include "TCanvas.h"
 
-#include "/Users/mverweij/wrk/macros/plotUtils.C"
-#include "/Users/mverweij/wrk/macros/style.C"
+//#include "/Users/mverweij/wrk/macros/plotUtils.C"
+//#include "/Users/mverweij/wrk/macros/style.C"
 
 #include "ForestPFs.h"
 
@@ -79,10 +79,11 @@ void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1) {
 
   Int_t startEntry = 0;
   Int_t lastEntry = fChain->GetEntries();//100;
-  
+  Printf("lastEntry: %d",lastEntry);
+ 
   for (int j=startEntry; j<lastEntry; j++) {
     fChain->GetEntry(j);
-
+    if(j%10000==0) cout << "entry: "<< j << endl;
     if(!MinBiasTriggerBit) continue;
     if(!phfCoincFilter) continue;
     
