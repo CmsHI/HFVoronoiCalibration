@@ -67,12 +67,9 @@ int main(int argc, char *argv[])
     }
     TFile *f = TFile::Open(argv[index_file + 1]);
     TTree *root_tree = reinterpret_cast<TTree *>(gDirectory->Get(root_tree_name));
-    //    TTree *hlt_tree  = reinterpret_cast<TTree *>(gDirectory->Get(hlt_tree_name));
-    // TTree *skim_tree  = reinterpret_cast<TTree *>(gDirectory->Get(skim_tree_name));
     
     size_t nevent_file = root_tree->GetEntries();
     fprintf(stderr, "nevent_file: %lu\n",nevent_file);
-    // nevent_file = std::max(static_cast<size_t>(1000), nevent_file);
 
     nevent += nevent_file;
     f->Close();
@@ -80,13 +77,10 @@ int main(int argc, char *argv[])
 
   fprintf(stderr, "%s:%d: nevent = %lu\n", __FILE__, __LINE__, nevent);
 
-  //  nevent = std::min(11000UL, nevent);//MVedit
-
   fprintf(stderr, "%s:%d: nevent = %lu\n", __FILE__, __LINE__, nevent);
   
   if (nevent < 1) {
-    // No point to continue, and LAPACK would also fail in this
-    // case.
+    // No point to continue, and LAPACK would also fail in this case
     exit(EXIT_FAILURE);
   }
 
@@ -120,8 +114,7 @@ int main(int argc, char *argv[])
   const size_t nregularization = nfeature * (norder - 1);
   nevent = 20000;
   const size_t feature_size = nevent + nregularization;
-  //  const size_t feature_size = 20000 + nregularization;
-
+ 
   static const double default_value = 0;
 
   // Use Fortran ordering (row = event number) for LAPACK
@@ -204,8 +197,6 @@ int main(int argc, char *argv[])
       root_tree->SetBranchAddress("pfEta", pfEta);
       root_tree->SetBranchAddress("pfPhi", pfPhi);
     }
-
-    //    root_tree->AddFriend(hlt_tree);
 		
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, argv[index_file + 1]);
     if (nevent_read > nevent) continue;
@@ -214,7 +205,6 @@ int main(int argc, char *argv[])
       if(nevent_read > nevent) continue;
       
       root_tree->GetEntry(i);
-      //hlt_tree->GetEntry(i);
       
       if(selMBTrigger && !MinBiasTriggerBit) continue;
       if(selMBTrigger && !phfCoincFilter) continue;
@@ -298,18 +288,10 @@ int main(int argc, char *argv[])
       scale_check_table[0].push_back(
 				     feature[(1) * feature_size + row] / scale[0]);
 
-      // static const double weight = 1;
-
       if (i % 1000 == 0) {
 	fprintf(stderr, "%s:%d: %lu %f\n", __FILE__, __LINE__, i, feature[feature_size + row]);
       }
-#if 0
-      for (size_t l = 1; l < norder; l++) {
-	feature[(l + 1) * feature_size + row] =
-	  feature[(l) * feature_size + row] *
-	  feature[(1) * feature_size + row];
-      }
-#else
+
       // Hermite
       for (size_t l = 2; l < norder + 1; l++) {
 	feature[(l) * feature_size + row] =
@@ -318,7 +300,7 @@ int main(int argc, char *argv[])
 	  exp(-feature[(1) * feature_size + row] *
 	      feature[(1) * feature_size + row]);
       }
-#endif
+
       for (size_t k = 1; k < nfourier; k++) {
 	feature[((2 * k - 1) * norder + 1) * feature_size + row] = 0;
 	for (size_t m = 0; m < 3; m++) {
@@ -326,13 +308,7 @@ int main(int argc, char *argv[])
 	    (pt_fourier[0        ][m][k][0] +
 	     pt_fourier[nedge - 2][m][k][0]);
 	}
-#if 0
-	for (size_t l = 1; l < norder; l++) {
-	  feature[((2 * k - 1) * norder + l + 1) * feature_size + row] =
-	    feature[((2 * k - 1) * norder + l) * feature_size + row] *
-	    feature[((2 * k - 1) * norder + 1) * feature_size + row];
-	}
-#else
+
 	for (size_t l = 2; l < norder + 1; l++) {
 	  feature[((2 * k - 1) * norder + l) * feature_size + row] =
 	    hermite_h_normalized(2 * l - 1,
@@ -340,20 +316,14 @@ int main(int argc, char *argv[])
 	    exp(-feature[((2 * k - 1) * norder + 1) * feature_size + row] *
 		feature[((2 * k - 1) * norder + 1) * feature_size + row]);
 	}
-#endif
+
 	feature[((2 * k    ) * norder + 1) * feature_size + row] = 0;
 	for (size_t m = 0; m < 3; m++) {
 	  feature[((2 * k    ) * norder + 1) * feature_size + row] += scale[k] *
 	    (pt_fourier[0        ][m][k][1] +
 	     pt_fourier[nedge - 2][m][k][1]);
 	}
-#if 0
-	for (size_t l = 1; l < norder; l++) {
-	  feature[((2 * k    ) * norder + l + 1) * feature_size + row] =
-	    feature[((2 * k    ) * norder + l) * feature_size + row] *
-	    feature[((2 * k    ) * norder + 1) * feature_size + row];
-	}
-#else
+
 	for (size_t l = 2; l < norder + 1; l++) {
 	  feature[((2 * k    ) * norder + l) * feature_size + row] =
 	    hermite_h_normalized(2 * l - 1,
@@ -361,7 +331,6 @@ int main(int argc, char *argv[])
 	    exp(-feature[((2 * k    ) * norder + 1) * feature_size + row] *
 		feature[((2 * k    ) * norder + 1) * feature_size + row]);
 	}
-#endif
 	scale_check_table[k].push_back(std::max(feature[((2 * k - 1) * norder + 1) * feature_size + row], feature[((2 * k    ) * norder + 1) * feature_size + row]) / scale[k]);
       }
 
@@ -401,15 +370,11 @@ int main(int argc, char *argv[])
     }
     f->Close();
   }
-#if 0
-  fprintf(stderr, "\r                                             "
-	  "                                  \n");
-#endif
+
   fprintf(stderr, "%s:%d: nevent = %lu\n", __FILE__, __LINE__, nevent);
 
   // Regularization
 
-  //const double tau = 1e-3 * nevent;
   size_t row = nevent;
 
   for (size_t i = 0; i < nfeature; i++) {
@@ -419,7 +384,6 @@ int main(int argc, char *argv[])
       const size_t column = i * norder + j + 1;
 
       feature[column * feature_size + row] = tau;
-      //target[column * feature_size + row] = tau;
 
       for (size_t k = 1; k < nrhs; k++) {
 	target[k * target_size + row] = 0;
@@ -439,76 +403,6 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "%s:%d: %lu %f %f\n", __FILE__, __LINE__, i, scale_check_table[i][index_95], scale_check_table[i][index_99]);
   }
-
-
-#if 1
-  std::sort(density_table.begin(), density_table.end());
-
-  for (size_t i = 0; i < nevent; i++) {
-    const double e_hf = feature[(1) * feature_size + i] / scale[0];
-    const std::vector<double>::const_iterator density_table_iterator = std::lower_bound(density_table.begin(), density_table.end(), e_hf);
-    double weight = 0;
-
-    if (density_table_iterator != density_table.end()) {
-      static const int naverage = 2 * 16 + 1;
-      const int index = density_table_iterator - density_table.begin();
-      const int index_min = std::max(0, index - (naverage - 1) / 2);
-      const int index_max = std::min(static_cast<int>(density_table.size() - 1), index + (naverage - 1) / 2);
-      const double range_min = density_table[index_min];
-      const double range_max = density_table[index_max];
-
-      const double inverse_density = (range_max - range_min) * nevent / (index_max - index_min);
-
-      weight = sqrt(std::max(0.0, inverse_density));
-
-      if (i % 1000 == 0) {
-	fprintf(stderr, "%s:%d: %lu %f %f\n", __FILE__, __LINE__, i, e_hf, weight);
-      }
-    }
-
-    double max_abs_feature = 0;
-
-    for (size_t j = 1; j < ncolumn; j += norder) {
-      max_abs_feature = std::max(max_abs_feature, fabs(feature[j * feature_size + i]));
-    }
-    weight = 1.0/(1.0 + exp(12.0 * (max_abs_feature - 0.8)));
-
-    for (size_t j = 0; j < ncolumn; j++) {
-      feature_copy[j * feature_size + i] = feature[j * feature_size + i];
-      feature[j * feature_size + i] *= weight;
-    }
-    for (size_t j = 0; j < nrhs; j++) {
-      target_copy[j * target_size + i] = target[j * target_size + i];
-      target[j * target_size + i] *= weight;
-    }
-  }
-#endif
-
-#if 0
-  fprintf(stdout, "feature =\n");
-  for (size_t j = 0; j < ncolumn; j++) {
-    for (size_t i = 0; i < feature_size; i++) {
-      fprintf(stdout, "%g ", feature[j * feature_size + i]);
-    }
-    fprintf(stdout, "\n");
-  }
-  fprintf(stdout, "target =\n");
-  for (size_t j = 0; j < nrhs; j++) {
-    for (size_t i = 0; i < target_size; i++) {
-      fprintf(stdout, "%g ", target[j * target_size + i]);
-    }
-    fprintf(stdout, "\n");
-  }
-#endif
-
-  // addting from Raghav goig from MC to Data for Run2. comparing run1 data to MC. 
-  // float scaleFeature_ = 7.42673e-01;
-  // float scaleTarget_ = 1.91625e+00;
-  
-  // std::transform(feature.begin(), feature.end(), feature.begin(),
-  //              std::bind1st(std::multiplies<T>(),scaleFeature_));
-  // std::transform(target.begin(), target.end(), target.begin(),
-  //              std::bind1st(std::multiplies<T>(),scaleTarget_));
   
   std::vector<double> singular_value(
 				     std::min(feature_size, ncolumn),
@@ -609,11 +503,6 @@ int main(int argc, char *argv[])
     for (size_t j = 1; j < 16; j++) {
       for (size_t k = 0; k < 3; k++) {
 	const size_t column_0 = ((j - 1) * nreduced_id + k) * nfeature;
-
-	// for (size_t l = 1; l < nfourier; l++) {
-	// 	for (size_t re_or_im = 0; re_or_im < 2;
-	// 		 re_or_im++) {
-	// const size_t column = column_0 + (2 * l - 1 + re_or_im);
 
 	for (size_t i = 0; i < nevent; i++) {
 	  double s = 0;
