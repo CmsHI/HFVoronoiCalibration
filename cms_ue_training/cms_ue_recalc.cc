@@ -64,24 +64,6 @@ namespace {
 
 size_t pf_id_reduce(const Int_t pf_id)
 {
-	// Particle::pdgId_ PFCandidate::particleId_
-	// PFCandidate::ParticleType Particle
-	// 0           0  X          unknown, or dummy 
-	// +211, -211  1  h          charged hadron 
-	// +11, -11    2  e          electron 
-	// +13, -13    3  mu         muon 
-	// 22          4  gamma      photon 
-	// 130         5  h0         neutral hadron 
-	// 130         6  h_HF       hadronic energy in an HF tower 
-	// 22          7  egamma_HF  electromagnetic energy in an HF tower
-
-	if (pf_id == 4) {
-		return 1;
-	}
-	else if (pf_id >= 5 && pf_id <= 7) {
-		return 2;
-	}
-
 	return 0;
 }
 
@@ -156,7 +138,9 @@ Delaunay_triangulation_caching_degeneracy_removal_policy_2<
 		 4.191,  4.363,  4.538,  4.716,  4.889,  5.191
 	};
 
-	const std::vector<double> cms_hcal_edge_pseudorapidity_v(cms_hcal_edge_pseudorapidity, cms_hcal_edge_pseudorapidity + ncms_hcal_edge_pseudorapidity);
+	const std::vector<double> cms_hcal_edge_pseudorapidity_v(
+		cms_hcal_edge_pseudorapidity,
+		cms_hcal_edge_pseudorapidity + ncms_hcal_edge_pseudorapidity);
 
 		for (std::vector<point_2d_t>::const_iterator iterator =
 				 particle_pseudorapidity_azimuth.begin();
@@ -169,15 +153,15 @@ Delaunay_triangulation_caching_degeneracy_removal_policy_2<
 				const double origin = j == 0 ? 0 :
 					j == -1 ? 2 * cms_hcal_edge_pseudorapidity_v.front() :
 					2 * cms_hcal_edge_pseudorapidity_v.back();
-			for (int k = -1; k <= 1; k++) {
-				const point_2d_t p(origin + parity * iterator->x(),
-								   k * (2 * M_PI) + iterator->y());
-				const voronoi_diagram_t::Face_handle
-					handle = diagram.insert(p);
+				for (int k = -1; k <= 1; k++) {
+					const point_2d_t p(origin + parity * iterator->x(),
+									   k * (2 * M_PI) + iterator->y());
+					const voronoi_diagram_t::Face_handle
+						handle = diagram.insert(p);
 
-				face_index[handle] =
-					iterator - particle_pseudorapidity_azimuth.begin();
-			}
+					face_index[handle] = iterator -
+						particle_pseudorapidity_azimuth.begin();
+				}
 			}
 		}
 
@@ -269,12 +253,11 @@ fastjet::PseudoJet pseudo_jet(
 	const double perp, const double pseudorapidity,
 	const double azimuth, const double mass = 0)
 {
-	const double x = perp * cos(azimuth);
-	const double y = perp * sin(azimuth);
-	const double z = perp * sinh(pseudorapidity);
-	const double t = sqrt(x * x + y * y + z * z + mass * mass);
+	fastjet::PseudoJet r;
 
-	return fastjet::PseudoJet(x, y, z, t);
+	r.reset_PtYPhiM(perp, pseudorapidity, azimuth, mass);
+
+	return r;
 }
 
 void antikt_cluster(
@@ -282,6 +265,7 @@ void antikt_cluster(
 	float *jet_azimuth, int &njet,
 	const std::vector<fastjet::PseudoJet> particle_positive,
 	const std::vector<fastjet::PseudoJet> particle,
+	float *pf_particle,
 	fastjet::JetDefinition jet_definition)
 {
 	const fastjet::ClusterSequence
@@ -294,14 +278,14 @@ void antikt_cluster(
 		std::vector<fastjet::PseudoJet> constituent =
 			cluster_sequence.constituents(jet[i]);
 		fastjet::PseudoJet jet_resum(0, 0, 0, 0);
-		double perp_resum = 0;
+		// double perp_resum = 0;
 
 		for (std::vector<fastjet::PseudoJet>::const_iterator
 				 iterator_constituent = constituent.begin();
 			 iterator_constituent != constituent.end();
 			 iterator_constituent++) {
-			jet_resum += *iterator_constituent;
-			perp_resum += iterator_constituent->perp();
+			jet_resum += particle[iterator_constituent->user_index()];
+			// perp_resum += pf_particle[iterator_constituent->user_index()];
 		}
 
 		jet_perp[i] = jet_resum.perp();
@@ -449,6 +433,16 @@ void voronoi_recalc(const char *filename, const int data,
 	Int_t refparton_flavorForB[NOBJECT_MAX];
 	Int_t subid[NOBJECT_MAX];
 
+	Int_t ngen;
+	Int_t genmatchindex[NOBJECT_MAX];
+	Float_t genpt[NOBJECT_MAX];
+	Float_t geneta[NOBJECT_MAX];
+	Float_t geny[NOBJECT_MAX];
+	Float_t genphi[NOBJECT_MAX];
+	Float_t gendphijt[NOBJECT_MAX];
+	Float_t gendrjt[NOBJECT_MAX];
+	Int_t gensubid[NOBJECT_MAX];
+
 	// Set branch addresses.
 	t->SetBranchAddress("evt", &evt);
 	// t->SetBranchAddress("b", &b);
@@ -472,6 +466,16 @@ void voronoi_recalc(const char *filename, const int data,
 	t->SetBranchAddress("refparton_flavor", refparton_flavor);
 	t->SetBranchAddress("refparton_flavorForB", refparton_flavorForB);
 	t->SetBranchAddress("subid", subid);
+
+	t->SetBranchAddress("ngen",&ngen);
+	t->SetBranchAddress("genmatchindex",genmatchindex);
+	t->SetBranchAddress("genpt",genpt);
+	t->SetBranchAddress("geneta",geneta);
+	t->SetBranchAddress("geny",geny);
+	t->SetBranchAddress("genphi",genphi);
+	t->SetBranchAddress("gendphijt",gendphijt);
+	t->SetBranchAddress("gendrjt",gendrjt);
+	t->SetBranchAddress("gensubid",gensubid);
 
 	fprintf(stderr, "%s:%d: data = %d, calorimetric = %d\n", __FILE__, __LINE__, data, calorimetric);
 
@@ -529,7 +533,9 @@ void voronoi_recalc(const char *filename, const int data,
 		0.522, 0.783, 1.131, 1.479, 1.740, 2.043, 2.650, 5.191
 	};
 
-	const std::vector<double> edge_pseudorapidity_v(edge_pseudorapidity, edge_pseudorapidity + nedge_pseudorapidity);
+	const std::vector<double> edge_pseudorapidity_v(
+		edge_pseudorapidity,
+		edge_pseudorapidity + nedge_pseudorapidity);
 
 	static const size_t ncms_hcal_edge_pseudorapidity = 82 + 1;
 	static const double cms_hcal_edge_pseudorapidity[
@@ -549,7 +555,9 @@ void voronoi_recalc(const char *filename, const int data,
 		 4.191,  4.363,  4.538,  4.716,  4.889,  5.191
 	};
 
-	const std::vector<double> cms_hcal_edge_pseudorapidity_v(cms_hcal_edge_pseudorapidity, cms_hcal_edge_pseudorapidity + ncms_hcal_edge_pseudorapidity);
+	const std::vector<double> cms_hcal_edge_pseudorapidity_v(
+		cms_hcal_edge_pseudorapidity,
+		cms_hcal_edge_pseudorapidity + ncms_hcal_edge_pseudorapidity);
 
 	static const size_t ncms_ecal_edge_pseudorapidity = 344 + 1;
 	double cms_ecal_edge_pseudorapidity[
@@ -562,7 +570,9 @@ void voronoi_recalc(const char *filename, const int data,
 			2.9928;
 	};
 
-	const std::vector<double> cms_ecal_edge_pseudorapidity_v(cms_ecal_edge_pseudorapidity, cms_ecal_edge_pseudorapidity + ncms_ecal_edge_pseudorapidity);
+	const std::vector<double> cms_ecal_edge_pseudorapidity_v(
+		cms_ecal_edge_pseudorapidity,
+		cms_ecal_edge_pseudorapidity + ncms_ecal_edge_pseudorapidity);
 
 	size_t nentries = root_tree->GetEntries();
 	//nentries = 50;
@@ -583,18 +593,18 @@ void voronoi_recalc(const char *filename, const int data,
 			t->GetEntry(i);
 		}
 
+		fprintf(stderr, "%s:%d: %d\n", __FILE__, __LINE__, hiBin);
+
+		if ((hiBin * 0.5 >= 10 && hiBin * 0.5 < 30 && i % 3 != 0) ||
+			(hiBin * 0.5 >= 50 && i % 5 != 0)) {
+			continue;
+		}
 
 			std::vector<point_2d_t> particle_pseudorapidity_azimuth;
-			std::vector<double> particle_perp;
-			std::vector<int> particle_reduced_id;
 
 			for (Int_t k = 0; k < nPFpart; k++) {
-				size_t reduced_id = pf_id_reduce(pfId[k]);
-
 				particle_pseudorapidity_azimuth.push_back(point_2d_t(
 						pfEta[k], pfPhi[k]));
-				particle_perp.push_back(pfPt[k]);
-				particle_reduced_id.push_back(reduced_id);
 			}
 
 			std::vector<double> particle_area;
@@ -805,8 +815,6 @@ void voronoi_recalc(const char *filename, const int data,
 		}
 
 /////////////////////////////////////////////////////////////////////
-		fprintf(stderr, "%s:%d: %d\n", __FILE__, __LINE__, hiBin);
-
 		for (Int_t j = 0; j < 16; j++) {
 			float cone_pseudorapidity = rand.Uniform(-5.191, 5.191);
 			float cone_azimuth = rand.Uniform(-M_PI, M_PI);
@@ -839,7 +847,9 @@ void voronoi_recalc(const char *filename, const int data,
 			pf_particle_pseudojet.push_back(p);
 
 			fastjet::PseudoJet pp =
-				pseudo_jet(std::max(infinitesimalPt, pfVsPtInitialRecalc[k]), pfEta[k], pfPhi[k]);
+				pseudo_jet(std::max(infinitesimalPt,
+									pfVsPtInitialRecalc[k]),
+						   pfEta[k], pfPhi[k]);
 
 			pp.set_user_index(k);
 			pf_particle_pseudojet_positive.push_back(pp);
@@ -849,40 +859,48 @@ void voronoi_recalc(const char *filename, const int data,
 
 		for (Int_t j = 0; j < nref; j++) {
 			if (refpt[j] > 0) {
-				fprintf(stderr, "%s:%d: %d %f %f %f %f\n", __FILE__, __LINE__, j, refpt[j], jtpt[j], jteta[j], jtphi[j]);
+				fprintf(stderr, "%s:%d: %d %f %f %f %f\n", __FILE__, __LINE__, j, refpt[j], rawpt[j], jteta[j], jtphi[j]);
 			}
 		}
 
 		antikt_cluster(rawpt, jteta, jtphi, nref,
 					   pf_particle_pseudojet_positive,
-					   pf_particle_pseudojet,
+					   pf_particle_pseudojet, pfVsPtInitialRecalc,
 					   jet_definition);
+
+		std::vector<bool> taken(nref, false);
 
 		for (Int_t j = 0; j < nref; j++) {
 			int index_max = -1;
 			float perp_max = FLT_MIN;
 
-			for (Int_t k = 0; k < nref_old; k++) {
-				if (std::pow(jteta[j] - refeta[k], 2) +
-					std::pow(angular_range_reduce(jtphi[j] - refphi[k]), 2) < antikt_distance * antikt_distance) {
-					if (refpt[k] > perp_max) {
+			for (Int_t k = 0; k < ngen; k++) {
+				if (std::pow(jteta[j] - geneta[k], 2) +
+					std::pow(angular_range_reduce(
+						jtphi[j] - genphi[k]), 2) <
+					antikt_distance * antikt_distance) {
+					if (genpt[k] > perp_max && gensubid[k] == 0 && !taken[k]) {
 						index_max = k;
-						perp_max = refpt[k];
+						perp_max = genpt[k];
 					}
 				}
 			}
 
 			if (index_max != -1) {
-				refpt[j] = refpt[index_max];
-				refeta[j] = refeta[index_max];
-				refphi[j] = refphi[index_max];
-				refparton_flavor[j] = refparton_flavor[index_max];
+				refpt[j] = genpt[index_max];
+				refeta[j] = geneta[index_max];
+				refphi[j] = genphi[index_max];
+				refparton_flavor[j] = -999;
+				subid[j] = gensubid[index_max];
+
+				taken[index_max] = true;
 			}
 			else {
 				refpt[j] = -999;
 				refeta[j] = -999;
 				refphi[j] = -999;
 				refparton_flavor[j] = -999;
+				subid[j] = -999;
 			}
 		}
 		fprintf(stderr, "%s:%d: %d %d %d\n", __FILE__, __LINE__, hiBin, nref, nref_old);
