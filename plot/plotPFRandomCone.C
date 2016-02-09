@@ -1,6 +1,14 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TCanvas.h"
+#include "TH3D.h"
+#include "TChain.h"
+#include "TH1.h"
+#include "TMath.h"
+#include "TVector2.h"
+#include "TRandom3.h"
+
+#include <iostream>
 
 //#include "/Users/mverweij/wrk/macros/plotUtils.C"
 //#include "/Users/mverweij/wrk/macros/style.C"
@@ -9,10 +17,10 @@
 
 Double_t deltaR(const Double_t phi1, const Double_t phi2, const Double_t eta1, const Double_t eta2);
 
-void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1) {
+void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int maxEvents = -1) {
 
-  gStyle->SetOptStat(0000);
-  gStyle->SetOptTitle(0);
+  // gStyle->SetOptStat(0000);
+  // gStyle->SetOptTitle(0);
 
   double minEta = -1.5;
   double maxEta = 1.5;
@@ -61,7 +69,7 @@ void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1) {
   if (fChain->GetBranch("pfPhi"))
     fChain->SetBranchAddress("pfPhi", fPFs.pfPhi, &fPFs.b_pfPhi);
 
-  Printf("nentries: %d",(Int_t)fChain->GetEntries());
+  //Printf("nentries: %d",(Int_t)fChain->GetEntries());
 
   TList *fOutput =  new TList();
   TH1::SetDefaultSumw2();
@@ -79,16 +87,21 @@ void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1) {
 
   Int_t startEntry = 0;
   Int_t lastEntry = fChain->GetEntries();//100;
+  Printf("events in chain: %d",lastEntry);
+  if(maxEvents<lastEntry)
+    lastEntry = maxEvents;
   Printf("lastEntry: %d",lastEntry);
+
+  TRandom3 *rnd = new TRandom3();
  
   for (int j=startEntry; j<lastEntry; j++) {
     fChain->GetEntry(j);
-    if(j%10000==0) cout << "entry: "<< j << endl;
-    if(!MinBiasTriggerBit) continue;
+    if(j%100==0) std::cout << "entry: "<< j << std::endl;
+    //if(!MinBiasTriggerBit) continue;
     if(!phfCoincFilter) continue;
     
-    double etaRC = gRandom->Rndm() * (maxEta - minEta) + minEta;
-    double phiRC = gRandom->Rndm() * (maxPhi - minPhi) + minPhi;
+    double etaRC = rnd->Rndm() * (maxEta - minEta) + minEta;
+    double phiRC = rnd->Rndm() * (maxPhi - minPhi) + minPhi;
 
     double ptRC = 0.;
     double ptRCVS = 0.;

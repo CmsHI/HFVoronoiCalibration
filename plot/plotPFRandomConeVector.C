@@ -1,18 +1,26 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TCanvas.h"
+#include "TH3D.h"
+#include "TChain.h"
+#include "TH1.h"
+#include "TMath.h"
+#include "TVector2.h"
+#include "TRandom3.h"
+
+#include <iostream>
 
 //#include "/Users/mverweij/wrk/macros/plotUtils.C"
 //#include "/Users/mverweij/wrk/macros/style.C"
 
-//#include "ForestPFs.h"
+#include "ForestPFsVector.h"
 
 Double_t deltaR(const Double_t phi1, const Double_t phi2, const Double_t eta1, const Double_t eta2);
 
-void plotTowerRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int maxEvents = -1) {
+void plotPFRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int maxEvents = -1) {
 
-  gStyle->SetOptStat(0000);
-  gStyle->SetOptTitle(0);
+  // gStyle->SetOptStat(0000);
+  // gStyle->SetOptTitle(0);
 
   double minEta = -1.5;
   double maxEta = 1.5;
@@ -21,7 +29,7 @@ void plotTowerRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int
   double radiusRC = 0.4;
   
   TChain *fChain = new TChain("hiEvtAnalyzer/HiTree");
-  TChain *pfTree = new TChain("rechitanalyzer/tower");
+  TChain *pfTree = new TChain("pfcandAnalyzer/pfTree");
   TChain *skimTree = new TChain("skimanalysis/HltTree");
   TChain *hltTree = new TChain("hltanalysis/HltTree");
   //  TFile *f = TFile::Open(str.Data());
@@ -38,30 +46,30 @@ void plotTowerRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int
     return;
   }
 
-  Int_t nPFpart;
-  Int_t pfId[32768];
-  Float_t pfPt[32768];
-  Float_t pfEta[32768];
-  Float_t pfPhi[32768];
-  Float_t pfPtVS[32768];
-  
   Int_t MinBiasTriggerBit;
   Int_t phfCoincFilter;
-
+  
   Int_t           hiBin;
   TBranch        *b_hiBin;   //!
   fChain->SetBranchAddress("hiBin", &hiBin, &b_hiBin);
-  //fChain->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
   fChain->SetBranchAddress("HLT_HIL1MinimumBiasHF1ANDExpress_v1",&MinBiasTriggerBit);
   fChain->SetBranchAddress("phfCoincFilter3",&phfCoincFilter);
+  
+  ForestPFsVector                    fPFs;              //!PFs in tree
+  if (fChain->GetBranch("nPFpart"))
+    fChain->SetBranchAddress("nPFpart", &fPFs.nPFpart, &fPFs.b_nPFpart);
+  if (fChain->GetBranch("pfId"))
+    fChain->SetBranchAddress("pfId", &fPFs.pfId, &fPFs.b_pfId);
+  if (fChain->GetBranch("pfPt"))
+    fChain->SetBranchAddress("pfPt", &fPFs.pfPt, &fPFs.b_pfPt);
+  if (fChain->GetBranch("pfVsPtInitial"))
+    fChain->SetBranchAddress("pfVsPtInitial", &fPFs.pfVsPt, &fPFs.b_pfVsPt);
+  if (fChain->GetBranch("pfEta"))
+    fChain->SetBranchAddress("pfEta", &fPFs.pfEta, &fPFs.b_pfEta);
+  if (fChain->GetBranch("pfPhi"))
+    fChain->SetBranchAddress("pfPhi", &fPFs.pfPhi, &fPFs.b_pfPhi);
 
-  fChain->SetBranchAddress("n", &nPFpart);
-  fChain->SetBranchAddress("et", pfPt);
-  fChain->SetBranchAddress("eta", pfEta);
-  fChain->SetBranchAddress("phi", pfPhi);
-  fChain->SetBranchAddress("vsPt", pfPtVS);
-
-  Printf("nentries: %d",(Int_t)fChain->GetEntries());
+  //Printf("nentries: %d",(Int_t)fChain->GetEntries());
 
   TList *fOutput =  new TList();
   TH1::SetDefaultSumw2();
@@ -83,24 +91,26 @@ void plotTowerRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int
   if(maxEvents<lastEntry)
     lastEntry = maxEvents;
   Printf("lastEntry: %d",lastEntry);
-   
+
+  TRandom3 *rnd = new TRandom3();
+ 
   for (int j=startEntry; j<lastEntry; j++) {
     fChain->GetEntry(j);
-    if(j%1000==0) cout << "entry: "<< j << endl;
+    if(j%100==0) std::cout << "entry: "<< j << std::endl;
     //if(!MinBiasTriggerBit) continue;
-    //if(!phfCoincFilter) continue;
-
-    double etaRC = gRandom->Rndm() * (maxEta - minEta) + minEta;
-    double phiRC = gRandom->Rndm() * (maxPhi - minPhi) + minPhi;
+    if(!phfCoincFilter) continue;
+    
+    double etaRC = rnd->Rndm() * (maxEta - minEta) + minEta;
+    double phiRC = rnd->Rndm() * (maxPhi - minPhi) + minPhi;
 
     double ptRC = 0.;
     double ptRCVS = 0.;
     Int_t pfCount = 0;
-    for(Int_t i = 0; i<nPFpart; i++) {
-      double pt = pfPt[i];
-      double ptVS = pfPtVS[i];
-      double phi = pfPhi[i];
-      double eta = pfEta[i];
+    for(Int_t i = 0; i<fPFs.nPFpart; i++) {
+      double pt = fPFs.pfPt->at(i);
+      double ptVS = fPFs.pfVsPt->at(i);
+      double phi = fPFs.pfPhi->at(i);
+      double eta = fPFs.pfEta->at(i);
 
       double dr = deltaR(phi,phiRC,eta,etaRC);
       if(dr<radiusRC) {
@@ -119,7 +129,7 @@ void plotTowerRandomCone(TString str = "forest.root", Int_t nRCPerEvent = 1, int
     h2MultPtRCEtaVS->Fill(pfCount,ptRCVS,etaRC);
   }
 
-  TFile *fout = new TFile("RandomConesCalo.root","RECREATE");
+  TFile *fout = new TFile("RandomCones.root","RECREATE");
   fOutput->Write();
   fout->Write();
   fout->Close();
