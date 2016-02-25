@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	bool calorimetric = false;
+	bool calorimetric = true;
 
 	for (int i = 1; i < argc; i++) {
 		if (strncmp(argv[i], "-c", 2) == 0 ||
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 		TTree *skim_tree = reinterpret_cast<TTree *>(gDirectory->Get(skim_tree_name));
 		size_t nevent_file = root_tree->GetEntries();
 
-		nevent_file = std::min(static_cast<size_t>(50000), nevent_file);
+		nevent_file = std::min(static_cast<size_t>(20000), nevent_file);
 
 		bool is_mc = false;
 
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 		TTree *skim_tree = reinterpret_cast<TTree *>(gDirectory->Get(skim_tree_name));
 		size_t nevent_file = root_tree->GetEntries();
 
-		nevent_file = std::min(static_cast<size_t>(50000), nevent_file);
+		nevent_file = std::min(static_cast<size_t>(20000), nevent_file);
 
 		bool is_mc = false;
 

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = false;
+  bool calorimetric = true;
 
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
