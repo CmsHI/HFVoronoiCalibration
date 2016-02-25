@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  bool calorimetric = true;
+  bool calorimetric = false;
 
   const char *root_tree_name = calorimetric ?
     "rechitanalyzer/tower" : "pfcandAnalyzer/pfTree";
@@ -178,6 +178,11 @@ int main(int argc, char *argv[])
     Float_t pfEta[32768];
     Float_t pfPhi[32768];
 
+    std::vector<int>           *pfIdVec  = 0;
+    std::vector<float>         *pfPtVec  = 0;
+    std::vector<float>         *pfEtaVec = 0;
+    std::vector<float>         *pfPhiVec = 0;
+    
     Int_t MinBiasTriggerBit;
     Int_t phfCoincFilter;
     
@@ -189,10 +194,10 @@ int main(int argc, char *argv[])
     }
     else {
       root_tree->SetBranchAddress("nPFpart", &nPFpart);
-      root_tree->SetBranchAddress("pfId", pfId);
-      root_tree->SetBranchAddress("pfPt", pfPt);
-      root_tree->SetBranchAddress("pfEta", pfEta);
-      root_tree->SetBranchAddress("pfPhi", pfPhi);
+      root_tree->SetBranchAddress("pfId", &pfIdVec);
+      root_tree->SetBranchAddress("pfPt", &pfPtVec);
+      root_tree->SetBranchAddress("pfEta", &pfEtaVec);
+      root_tree->SetBranchAddress("pfPhi", &pfPhiVec);
     }
 
     if(root_tree->GetBranch("HLT_HIL1MinimumBiasHF1AND_v1")) root_tree->SetBranchAddress("HLT_HIL1MinimumBiasHF1AND_v1",&MinBiasTriggerBit);
@@ -215,6 +220,8 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "%s:%d: %ld %d\n", __FILE__, __LINE__, i, nPFpart);
       }
 
+
+
       for (size_t plot_reduced_id = 0; plot_reduced_id < 3; plot_reduced_id++) {
 	for (size_t plot_edge_source = 0; plot_edge_source < nedge_pseudorapidity - 1; plot_edge_source++) {
 	  const size_t index_histogram = (plot_reduced_id * (nedge_pseudorapidity - 1) + plot_edge_source) * 5;
@@ -230,6 +237,12 @@ int main(int argc, char *argv[])
 		 sizeof(double));
 
 	  for (Int_t j = 0; j < nPFpart; j++) {
+            if (!calorimetric) {
+              pfId[j] = pfIdVec->at(j);
+              pfPt[j] = pfPtVec->at(j);
+              pfEta[j] = pfEtaVec->at(j);
+              pfPhi[j] = pfPhiVec->at(j);
+            }
 	    size_t reduced_id = calorimetric ?
 	      ((pfEta[j] >= -2.650 && pfEta[j] < 2.650) ? 2 : 2) :
 	      pf_id_reduce(pfId[j]);

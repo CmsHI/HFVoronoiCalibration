@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	bool calorimetric = true;
+	bool calorimetric = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (strncmp(argv[i], "-c", 2) == 0 ||
@@ -235,6 +235,11 @@ int main(int argc, char *argv[])
 		Float_t pfEta[32768];
 		Float_t pfPhi[32768];
 
+                std::vector<int>           *pfIdVec  = 0;
+                std::vector<float>         *pfPtVec  = 0;
+                std::vector<float>         *pfEtaVec = 0;
+                std::vector<float>         *pfPhiVec = 0;
+
 		if (calorimetric) {
 			root_tree->SetBranchAddress("n", &nPFpart);
 			root_tree->SetBranchAddress("et", pfPt);
@@ -242,11 +247,11 @@ int main(int argc, char *argv[])
 			root_tree->SetBranchAddress("phi", pfPhi);
 		}
 		else {
-			root_tree->SetBranchAddress("nPFpart", &nPFpart);
-			root_tree->SetBranchAddress("pfId", pfId);
-			root_tree->SetBranchAddress("pfPt", pfPt);
-			root_tree->SetBranchAddress("pfEta", pfEta);
-			root_tree->SetBranchAddress("pfPhi", pfPhi);
+                  root_tree->SetBranchAddress("nPFpart", &nPFpart);
+                  root_tree->SetBranchAddress("pfId", &pfIdVec);
+                  root_tree->SetBranchAddress("pfPt", &pfPtVec);
+                  root_tree->SetBranchAddress("pfEta", &pfEtaVec);
+                  root_tree->SetBranchAddress("pfPhi", &pfPhiVec);
 		}
 
 		fprintf(stderr, "%s:%d: %s is_mc = %d\n", __FILE__, __LINE__, argv[index_file + 1], static_cast<int>(is_mc));
@@ -283,6 +288,13 @@ int main(int argc, char *argv[])
 			// 130         5  h0         neutral hadron 
 			// 130         6  h_HF       hadronic energy in an HF tower 
 			// 22          7  egamma_HF  electromagnetic energy in an HF tower
+
+                  if (!calorimetric) {
+                    pfId[j] = pfIdVec->at(j);
+                    pfPt[j] = pfPtVec->at(j);
+                    pfEta[j] = pfEtaVec->at(j);
+                    pfPhi[j] = pfPhiVec->at(j);
+                  }
 
 			size_t reduced_id = 0;
 
